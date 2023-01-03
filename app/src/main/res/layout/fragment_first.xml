@@ -1,14 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/camera_container"
     android:background="@android:color/black"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <androidx.camera.view.PreviewView
-        android:id="@+id/view_finder"
+    <FrameLayout
+        android:id="@+id/frame_layout"
         android:layout_width="1080px"
-        android:layout_height="1440px" />
+        android:layout_height="1440px">
+
+
+        <androidx.camera.view.PreviewView
+            android:id="@+id/view_finder"
+            android:layout_width="1080px"
+            android:layout_height="1440px" />
+
+        <ImageView
+            android:id="@+id/freeze_preview"
+            android:visibility="gone"
+            android:layout_width="1080px"
+            android:layout_height="1440px" />
+
+<!--        <SurfaceView
+            android:id="@+id/camera_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            />
+-->
+
+    </FrameLayout>
+
+    <ImageButton
+        android:id="@+id/camera_freeze_button"
+
+        android:layout_width="200px"
+        android:layout_height="200px"
+        android:layout_marginTop="50px"
+        android:scaleType="fitCenter"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/frame_layout"
+        android:background="@drawable/ic_shutter"
+         />
+
+    <TextView
+        android:id="@+id/distance_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/camera_freeze_button"
+        android:textSize="36dp"
+        android:gravity="center"
+        android:text="Distance"
+        android:textColor="@color/white"
+        />
+
+    <EditText
+        app:layout_constraintTop_toBottomOf="@id/distance_text"
+        android:id="@+id/object_height_input"
+        android:text="6"
+        android:inputType="numberDecimal"
+        android:gravity="center"
+        android:layout_width="400px"
+        android:layout_height="wrap_content"/>
+    
 
 </androidx.constraintlayout.widget.ConstraintLayout>

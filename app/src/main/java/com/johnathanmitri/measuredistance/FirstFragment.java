@@ -2,12 +2,16 @@ package com.johnathanmitri.measuredistance;
 
 import static android.content.ContentValues.TAG;
 
+import android.graphics.Bitmap;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SizeF;
 import android.view.LayoutInflater;
@@ -25,13 +29,11 @@ import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.johnathanmitri.measuredistance.databinding.FragmentFirstBinding;
 
-import java.util.concurrent.ExecutionException;
+import java.text.DecimalFormat;
 
 public class FirstFragment extends Fragment
 {
@@ -41,6 +43,18 @@ public class FirstFragment extends Fragment
     private Preview preview;
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
+    CameraSelector cameraSelector;
+
+    private int viewportWidth;
+    private int viewportHeight;
+
+    private float verticalCameraFOV;
+    private double halfFovTangent;
+    private double lastObjectSizePixels;
+
+    private double objectHeightInUnits = 6;
+
+    private boolean isFrozen = false;
 
     @Override
     public View onCreateView(
@@ -54,36 +68,120 @@ public class FirstFragment extends Fragment
 
     }
 
+    public void objectResized(int topLinePos, int botLinePos) {
+        lastObjectSizePixels = botLinePos - topLinePos;
+        calculateDistance();
+    }
+    public void calculateDistance()
+    {
+        //Calculate the maximum size object the camera can see at this distance. This would be the same as the height of the object if that object filled up the entire screen.
+        double cameraViewHeightInUnits = objectHeightInUnits * ((double)viewportHeight / lastObjectSizePixels);
+
+        //double tanValue = Math.tan(Math.toRadians(verticalCameraFOV / 2));  //Tangent of half the angle. This is equal to Opp/Adj, which is (h/2) / distance
+
+        double distance = (cameraViewHeightInUnits / 2) / halfFovTangent;
+
+        String units = "ft";
+        binding.distanceText.setText("Distance: " +  new DecimalFormat("#.##").format(distance) + units);
+    }
+
+
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
     {
         super.onViewCreated(view, savedInstanceState);
 
-        /*binding.buttonFirst.setOnClickListener(new View.OnClickListener()
+        binding.cameraFreezeButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
-            public void onClick(View view)
+            public void onClick(View view2)
             {
-                NavHostFragment.findNavController(FirstFragment.this)
-                        .navigate(R.id.action_FirstFragment_to_SecondFragment);
-            }
-        });*/
+                if (!isFrozen)
+                {
+                    cameraProvider.unbind(preview);
 
-        android.hardware.Camera camera = android.hardware.Camera.open();
-        float[] fov = new float[2];
+                    binding.cameraFreezeButton.setImageResource( R.drawable.ic_shutter_pressed);
+
+                    Bitmap freezeFrame = binding.viewFinder.getBitmap();
+                    binding.viewFinder.setVisibility(View.GONE);
+
+                    binding.freezePreview.setImageBitmap(freezeFrame);
+                    binding.freezePreview.setVisibility(View.VISIBLE);
+                }
+                else
+                {
+                    binding.cameraFreezeButton.setImageResource(0);
+
+                    binding.freezePreview.setVisibility(View.GONE);
+                    binding.viewFinder.setVisibility(View.VISIBLE);
+
+                    camera = cameraProvider.bindToLifecycle(getActivity(), cameraSelector, preview);
+                }
+                isFrozen = !isFrozen;
+            }
+        });
+
+        binding.objectHeightInput.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start,
+                                          int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count)
+            {
+                if (s.length() != 0)
+                {
+                    double parsedNum = Double.parseDouble(s.toString());
+                    if (parsedNum > 0)
+                    {
+                        objectHeightInUnits = parsedNum;
+                        calculateDistance();
+                    }
+                }
+            }
+        });
+
+
+        /*float[] fov = new float[2];
         fov[0] = camera.getParameters()
                 .getHorizontalViewAngle();
         fov[1] = camera.getParameters()
-                .getVerticalViewAngle();
+                .getVerticalViewAngle();*/
+
+
+        android.hardware.Camera camera = android.hardware.Camera.open();
+        verticalCameraFOV = camera.getParameters().getHorizontalViewAngle(); //"horizontal" if camera were landscape. app only runs portrait.
         camera.release();
 
-        Toast.makeText(getContext(), "Horizontal FOV: " + fov[0] + "  Vert FOV: " + fov[1], 5).show();
+        halfFovTangent = Math.tan(Math.toRadians(verticalCameraFOV/2));
+
+        //Toast.makeText(getContext(), "Horizontal FOV: " + fov[0] + "  Vert FOV: " + fov[1], 5).show();
 
       //  Snackbar.make(view, "Horizontal FOV: " + fov[0] + "  Vert FOV: " + fov[1], Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
 
+        //TODO: RE ENABLE THE CAMERA LATER
         setUpCamera();
 
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
+        viewportWidth = displayMetrics.widthPixels;
+        viewportHeight = (int)(viewportWidth * (4.0/3.0));
+
+        CameraOverlayView cameraOverlayView = new CameraOverlayView(getContext(), this, viewportWidth, viewportHeight);
+        cameraOverlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        binding.frameLayout.addView(cameraOverlayView);
+
+
+        /*GLSurfaceView overlayView = new CameraOverlayView(getContext());
+        overlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        binding.frameLayout.addView(overlayView);
+*/
     }
 
     private float[] calculateFOV(CameraManager cManager) {
@@ -138,7 +236,7 @@ public class FirstFragment extends Fragment
 
         int rotation = Surface.ROTATION_0;
 
-        CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
+        cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
 
         Preview.Builder previewBuilder = new Preview.Builder();
 
