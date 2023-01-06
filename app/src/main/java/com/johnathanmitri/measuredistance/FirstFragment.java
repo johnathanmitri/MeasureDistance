@@ -2,7 +2,12 @@ package com.johnathanmitri.measuredistance;
 
 import static android.content.ContentValues.TAG;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
@@ -15,10 +20,10 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SizeF;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.camera.camera2.interop.Camera2Interop;
@@ -28,7 +33,9 @@ import androidx.camera.core.CameraSelector;
 import androidx.camera.core.Preview;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.johnathanmitri.measuredistance.databinding.FragmentFirstBinding;
@@ -48,6 +55,9 @@ public class FirstFragment extends Fragment
     private int viewportWidth;
     private int viewportHeight;
 
+    Drawable snowflakeFrozen;
+    Drawable snowflakeSelector;
+
     private float verticalCameraFOV;
     private double halfFovTangent;
     private double lastObjectSizePixels;
@@ -57,15 +67,63 @@ public class FirstFragment extends Fragment
     private boolean isFrozen = false;
 
     @Override
-    public View onCreateView(
-            LayoutInflater inflater, ViewGroup container,
-            Bundle savedInstanceState
-    )
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-
         binding = FragmentFirstBinding.inflate(inflater, container, false);
-        return binding.getRoot();
 
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        viewportWidth = displayMetrics.widthPixels;
+        viewportHeight = (int)(viewportWidth * (4.0/3.0));
+
+        binding.frameLayout.getLayoutParams().height = viewportHeight;
+       // binding.
+
+
+
+        return binding.getRoot();
+    }
+
+    private BroadcastReceiver volumeClickReciever = new BroadcastReceiver()
+    {
+        public void onReceive(Context context, Intent intent)
+        {
+            if (intent.getAction().equals("freeze_preview"))
+            {
+                toggleFreeze();
+            }
+        }
+    };
+
+
+    public void toggleFreeze()  //public because MainActivity needs to access it for volume button click.
+    {
+        if (!isFrozen)
+        {
+            //binding.cameraFreezeButton.setImageResource(R.drawable.snowflake_frozen);
+            binding.cameraFreezeButton.setImageDrawable(snowflakeFrozen);
+            cameraProvider.unbind(preview);
+
+
+            Bitmap freezeFrame = binding.viewFinder.getBitmap();
+            binding.viewFinder.setVisibility(View.GONE);
+
+            binding.freezePreview.setImageBitmap(freezeFrame);
+            binding.freezePreview.setVisibility(View.VISIBLE);
+        }
+        else
+        {
+            //Selector works with the "state_pressed", but mine is a toggle, not just a click. I kept it so that I could use the Focus state.
+            //binding.cameraFreezeButton.setImageResource(R.drawable.freeze_button_selector);
+            binding.cameraFreezeButton.setImageDrawable(snowflakeSelector);
+
+            binding.freezePreview.setVisibility(View.GONE);
+            binding.viewFinder.setVisibility(View.VISIBLE);
+
+            camera = cameraProvider.bindToLifecycle(getActivity(), cameraSelector, preview);
+        }
+        isFrozen = !isFrozen;
     }
 
     public void objectResized(int topLinePos, int botLinePos) {
@@ -90,34 +148,34 @@ public class FirstFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
+/*       binding.cameraFreezeButton.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view2, MotionEvent event)
+            {
+                if (event.getAction() == MotionEvent.ACTION_DOWN)
+                    binding.cameraFreezeButton.setImageResource(R.drawable.snowflake_frozen);
+                else if (event.getAction() == MotionEvent.ACTION_UP)
+                    binding.cameraFreezeButton.setImageResource(0);
+
+                return false;
+            }
+
+        });
+*/
+
+        snowflakeFrozen = ResourcesCompat.getDrawable(getResources(), R.drawable.snowflake_frozen, null);
+        snowflakeSelector = ResourcesCompat.getDrawable(getResources(), R.drawable.freeze_button_selector, null);
+
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(volumeClickReciever, new IntentFilter("freeze_preview"));
+
         binding.cameraFreezeButton.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View view2)
             {
-                if (!isFrozen)
-                {
-                    cameraProvider.unbind(preview);
-
-                    binding.cameraFreezeButton.setImageResource( R.drawable.ic_shutter_pressed);
-
-                    Bitmap freezeFrame = binding.viewFinder.getBitmap();
-                    binding.viewFinder.setVisibility(View.GONE);
-
-                    binding.freezePreview.setImageBitmap(freezeFrame);
-                    binding.freezePreview.setVisibility(View.VISIBLE);
-                }
-                else
-                {
-                    binding.cameraFreezeButton.setImageResource(0);
-
-                    binding.freezePreview.setVisibility(View.GONE);
-                    binding.viewFinder.setVisibility(View.VISIBLE);
-
-                    camera = cameraProvider.bindToLifecycle(getActivity(), cameraSelector, preview);
-                }
-                isFrozen = !isFrozen;
+                toggleFreeze();
             }
+
         });
 
         binding.objectHeightInput.addTextChangedListener(new TextWatcher() {
@@ -167,11 +225,6 @@ public class FirstFragment extends Fragment
         //TODO: RE ENABLE THE CAMERA LATER
         setUpCamera();
 
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-
-        viewportWidth = displayMetrics.widthPixels;
-        viewportHeight = (int)(viewportWidth * (4.0/3.0));
 
         CameraOverlayView cameraOverlayView = new CameraOverlayView(getContext(), this, viewportWidth, viewportHeight);
         cameraOverlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));

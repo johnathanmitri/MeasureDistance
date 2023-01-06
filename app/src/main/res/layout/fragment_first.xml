@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/camera_container"
     android:background="@android:color/black"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:tag="testTag">
 
     <FrameLayout
         android:id="@+id/frame_layout"
-        android:layout_width="1080px"
-        android:layout_height="1440px">
+        android:layout_width="match_parent"
+        android:layout_height="1440px"> <!-- this is set programmatically -->
 
 
         <androidx.camera.view.PreviewView
             android:id="@+id/view_finder"
-            android:layout_width="1080px"
-            android:layout_height="1440px" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
         <ImageView
             android:id="@+id/freeze_preview"
             android:visibility="gone"
-            android:layout_width="1080px"
-            android:layout_height="1440px" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
 <!--        <SurfaceView
             android:id="@+id/camera_overlay"
@@ -35,15 +35,18 @@
     <ImageButton
         android:id="@+id/camera_freeze_button"
 
-        android:layout_width="200px"
-        android:layout_height="200px"
-        android:layout_marginTop="50px"
+        android:layout_width="10mm"
+        android:layout_height="10mm"
+        android:layout_marginTop="10dp"
         android:scaleType="fitCenter"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/frame_layout"
-        android:background="@drawable/ic_shutter"
-         />
+        android:src="@drawable/freeze_button_selector"
+        android:background="@drawable/snowflake_normal"
+ />
+    <!-- android:focusable="true"
+        android:focusableInTouchMode="true" -->
 
     <TextView
         android:id="@+id/distance_text"
@@ -63,7 +66,8 @@
         android:inputType="numberDecimal"
         android:gravity="center"
         android:layout_width="400px"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"/>
     
 
 </androidx.constraintlayout.widget.ConstraintLayout>
