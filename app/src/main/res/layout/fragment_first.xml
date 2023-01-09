@@ -9,7 +9,7 @@
     <FrameLayout
         android:id="@+id/frame_layout"
         android:layout_width="match_parent"
-        android:layout_height="1440px"> <!-- this is set programmatically -->
+        android:layout_height="1440px"> <!-- this is set programmatically later -->
 
 
         <androidx.camera.view.PreviewView
@@ -56,6 +56,17 @@
         android:textSize="36dp"
         android:gravity="center"
         android:text="Distance"
+        android:textColor="@color/white"
+        />
+
+    <TextView
+        android:id="@+id/orientation_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/distance_text"
+        android:textSize="24dp"
+        android:gravity="center"
+        android:text="Orientation"
         android:textColor="@color/white"
         />
 

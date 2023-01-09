@@ -41,6 +41,10 @@ public class SecondFragment extends Fragment
                         .navigate(R.id.action_SecondFragment_to_FirstFragment);
             }
         });
+
+        LevelView levelView = new LevelView(getContext(), 200, 600);
+        levelView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        binding.frameLayout.addView(levelView);
     }
 
     @Override

@@ -8,12 +8,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
@@ -24,6 +29,7 @@ import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.camera.camera2.interop.Camera2Interop;
@@ -66,6 +72,7 @@ public class FirstFragment extends Fragment
 
     private boolean isFrozen = false;
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
@@ -78,9 +85,6 @@ public class FirstFragment extends Fragment
         viewportHeight = (int)(viewportWidth * (4.0/3.0));
 
         binding.frameLayout.getLayoutParams().height = viewportHeight;
-       // binding.
-
-
 
         return binding.getRoot();
     }
@@ -148,21 +152,6 @@ public class FirstFragment extends Fragment
     {
         super.onViewCreated(view, savedInstanceState);
 
-/*       binding.cameraFreezeButton.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view2, MotionEvent event)
-            {
-                if (event.getAction() == MotionEvent.ACTION_DOWN)
-                    binding.cameraFreezeButton.setImageResource(R.drawable.snowflake_frozen);
-                else if (event.getAction() == MotionEvent.ACTION_UP)
-                    binding.cameraFreezeButton.setImageResource(0);
-
-                return false;
-            }
-
-        });
-*/
-
         snowflakeFrozen = ResourcesCompat.getDrawable(getResources(), R.drawable.snowflake_frozen, null);
         snowflakeSelector = ResourcesCompat.getDrawable(getResources(), R.drawable.freeze_button_selector, null);
 
@@ -175,19 +164,20 @@ public class FirstFragment extends Fragment
             {
                 toggleFreeze();
             }
-
         });
 
         binding.objectHeightInput.addTextChangedListener(new TextWatcher() {
 
             @Override
-            public void afterTextChanged(Editable s) {}
+            public void afterTextChanged(Editable s)
+            {
 
-            @Override
-            public void beforeTextChanged(CharSequence s, int start,
-                                          int count, int after) {
             }
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after)
+            {
 
+            }
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count)
             {
@@ -203,28 +193,13 @@ public class FirstFragment extends Fragment
             }
         });
 
-
-        /*float[] fov = new float[2];
-        fov[0] = camera.getParameters()
-                .getHorizontalViewAngle();
-        fov[1] = camera.getParameters()
-                .getVerticalViewAngle();*/
-
-
         android.hardware.Camera camera = android.hardware.Camera.open();
         verticalCameraFOV = camera.getParameters().getHorizontalViewAngle(); //"horizontal" if camera were landscape. app only runs portrait.
         camera.release();
 
         halfFovTangent = Math.tan(Math.toRadians(verticalCameraFOV/2));
 
-        //Toast.makeText(getContext(), "Horizontal FOV: " + fov[0] + "  Vert FOV: " + fov[1], 5).show();
-
-      //  Snackbar.make(view, "Horizontal FOV: " + fov[0] + "  Vert FOV: " + fov[1], Snackbar.LENGTH_LONG).setAction("Action", null).show();
-
-
-        //TODO: RE ENABLE THE CAMERA LATER
         setUpCamera();
-
 
         CameraOverlayView cameraOverlayView = new CameraOverlayView(getContext(), this, viewportWidth, viewportHeight);
         cameraOverlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -235,6 +210,8 @@ public class FirstFragment extends Fragment
         overlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         binding.frameLayout.addView(overlayView);
 */
+
+
     }
 
     private float[] calculateFOV(CameraManager cManager) {
@@ -284,7 +261,6 @@ public class FirstFragment extends Fragment
 
     private void bindCameraUseCases()
     {
-
         int screenAspectRatio = AspectRatio.RATIO_4_3;  //every camera shoots a maximum of 4:3 aspect ratio i hope
 
         int rotation = Surface.ROTATION_0;
@@ -309,23 +285,18 @@ public class FirstFragment extends Fragment
         // Must unbind the use-cases before rebinding them
         cameraProvider.unbindAll();
 
-        if (camera != null) {
-            // Must remove observers from the previous camera instance
+        /*if (camera != null)
+        {
+           removeCameraStateObservers(camera.cameraInfo);
+        }*/
 
-//TODO: FIX THIS!!!
-    //        removeCameraStateObservers(camera!!.cameraInfo)
-        }
+        try
+        {
+            camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview);
 
-        try {
-            // A variable number of use-cases can be passed here -
-            // camera provides access to CameraControl & CameraInfo
-            camera = cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview);
-
-            // Attach the viewfinder's surface provider to preview use case
             preview.setSurfaceProvider(binding.viewFinder.getSurfaceProvider());
 
-//TODO: FIX THIS!!!
+//TODO: FIX THIS ?
             //observeCameraState(camera?.cameraInfo!!)
         } catch (Exception e) {
             Log.e(TAG, "Use case binding failed", e);
@@ -338,5 +309,24 @@ public class FirstFragment extends Fragment
         super.onDestroyView();
         binding = null;
     }
+
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        //levelView.onResume();
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+
+        //levelView.onPause();
+
+    }
+
 
 }
