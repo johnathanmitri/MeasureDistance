@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -43,7 +44,9 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-import com.johnathanmitri.measuredistance.databinding.ActivityMainBinding;
+//import com.johnathanmitri.measuredistance.databinding.ActivityMainBinding;
+import com.johnathanmitri.measuredistance.databinding.OnboardingPageBinding;
+import com.johnathanmitri.measuredistance.databinding.ContentMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -66,7 +69,9 @@ public class MainActivity extends AppCompatActivity
 {
 
     private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
+    private ContentMainBinding mainBinding;
+    //private OnboardingPageBinding onboardingBinding;
+    //private
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -77,9 +82,40 @@ public class MainActivity extends AppCompatActivity
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
 
+
+        SharedPreferences regPrefs = this.getSharedPreferences("preferences", Context.MODE_PRIVATE);
+        boolean isFirstRun = regPrefs.getBoolean("isFirstRun", true);  //default value is true if this value does not exist
+        if (isFirstRun)
+        {
+            //startActivity(new Intent(this, OnboardingActivity.class));
+            //onboardingBinding = OnboardingPageBinding.inflate(getLayoutInflater());
+            //setContentView(getLayoutInflater().inflate(R.layout.onboarding_page,null));
+            //setContentView((onboardingBinding.getRoot()));
+
+            onboardingBinding.button.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    mainBinding = ContentMainBinding.inflate(getLayoutInflater());
+                    setContentView(mainBinding.getRoot());
+                    SharedPreferences.Editor editor = regPrefs.edit();
+                    editor.putBoolean("isFirstRun", false);
+                    editor.apply();
+                }
+            });
+        }
+        else
+        {
+            //mainBinding = ContentMainBinding.inflate(getLayoutInflater());
+            //setContentView(mainBinding.getRoot());
+
+            //set fragment to MeasureFragment
+        }
+
+        mainBinding = ContentMainBinding.inflate(getLayoutInflater());
+        setContentView(mainBinding.getRoot());
         //setSupportActionBar(binding.toolbar);
 
        // NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);

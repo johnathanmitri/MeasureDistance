@@ -25,7 +25,7 @@ public class CameraOverlayView extends View
     private final int TOP_LINE = 1;
     private final int BOT_LINE = 2;
 
-    FirstFragment hostFragment;
+    MeasureFragment hostFragment;
 
     int topLinePos = 200;
     int botLinePos = 400;
@@ -59,7 +59,7 @@ public class CameraOverlayView extends View
     int color = Color.BLACK;
     int outlineColor = blue;
 */
-    public CameraOverlayView(Context context, FirstFragment hostFragment,  int width, int height)
+    public CameraOverlayView(Context context, MeasureFragment hostFragment, int width, int height)
     {
         super(context);
 

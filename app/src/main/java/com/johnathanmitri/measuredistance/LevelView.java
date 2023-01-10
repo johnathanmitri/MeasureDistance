@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.OvalShape;
 import android.graphics.drawable.shapes.RectShape;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -12,12 +11,9 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
-import android.view.MotionEvent;
 import android.view.View;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
 
 
 //This is for a level that displays the orientation of the device to help the user keep the device perfectly vertical.
@@ -27,7 +23,7 @@ public class LevelView extends View implements SensorEventListener
 
     private final ShapeDrawable anchorLine;
 
-    FirstFragment hostFragment;
+    MeasureFragment hostFragment;
 
     //int levelLinePos = 200;
     int anchorLinePos;

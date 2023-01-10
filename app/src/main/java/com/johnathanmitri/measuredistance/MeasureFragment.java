@@ -2,35 +2,33 @@ package com.johnathanmitri.measuredistance;
 
 import static android.content.ContentValues.TAG;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SizeF;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.camera.camera2.interop.Camera2Interop;
 import androidx.camera.core.AspectRatio;
@@ -43,12 +41,13 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.johnathanmitri.measuredistance.databinding.FragmentFirstBinding;
 
 import java.text.DecimalFormat;
 
-public class FirstFragment extends Fragment
+public class MeasureFragment extends Fragment
 {
 
     private FragmentFirstBinding binding;
@@ -147,6 +146,17 @@ public class FirstFragment extends Fragment
         binding.distanceText.setText("Distance: " +  new DecimalFormat("#.##").format(distance) + units);
     }
 
+    private ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted)
+                {
+                    setUpCamera();
+                }
+                else
+                {
+                    Toast.makeText(getContext(),"Permission was denied. Camera can't be accessed without permission. ", Toast.LENGTH_LONG).show();
+                }
+            });
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
     {
@@ -193,13 +203,19 @@ public class FirstFragment extends Fragment
             }
         });
 
-        android.hardware.Camera camera = android.hardware.Camera.open();
-        verticalCameraFOV = camera.getParameters().getHorizontalViewAngle(); //"horizontal" if camera were landscape. app only runs portrait.
-        camera.release();
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED)
+        {
+            if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
+            {
+                //TODO: EXPLAIN
+               // Snackbar.make(getView(), "Permission is needed to access camera.", 4);
+                Toast.makeText(getContext(),"Permission is needed to access camera.", Toast.LENGTH_LONG).show();
+            }
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+        else
+            setUpCamera();
 
-        halfFovTangent = Math.tan(Math.toRadians(verticalCameraFOV/2));
-
-        setUpCamera();
 
         CameraOverlayView cameraOverlayView = new CameraOverlayView(getContext(), this, viewportWidth, viewportHeight);
         cameraOverlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -241,6 +257,12 @@ public class FirstFragment extends Fragment
 
     private void setUpCamera()
     {
+        android.hardware.Camera camera = android.hardware.Camera.open();
+        verticalCameraFOV = camera.getParameters().getHorizontalViewAngle(); //"horizontal" if camera were landscape. app only runs portrait.
+        camera.release();
+
+        halfFovTangent = Math.tan(Math.toRadians(verticalCameraFOV/2));
+
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext());
         cameraProviderFuture.addListener(new Runnable()
         {
