@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@android:color/black"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:tag="testTag">
+    android:id="@+id/root">
 
     <FrameLayout
         android:id="@+id/frame_layout"
@@ -30,6 +31,8 @@
             />
 -->
 
+
+
     </FrameLayout>
 
     <ImageButton
@@ -41,12 +44,58 @@
         android:scaleType="fitCenter"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/frame_layout"
+        android:src="@drawable/freeze_button_selector"
+        android:background="@drawable/snowflake_normal"
+        />
+
+    <FrameLayout
+        app:layout_constraintLeft_toRightOf="@id/camera_freeze_button"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:id="@+id/level_view_frame"
+        app:layout_constraintTop_toBottomOf="@id/frame_layout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"/>
+
+    <TextView
+        android:id="@+id/distance_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/camera_freeze_button"
+        android:textSize="36dp"
+        android:gravity="center"
+        android:text="Distance"
+        android:textColor="@color/white"
+        />
+
+    <EditText
+        app:layout_constraintTop_toBottomOf="@id/distance_text"
+        android:id="@+id/object_height_input"
+        android:text="6"
+        android:inputType="numberDecimal"
+        android:gravity="center"
+        android:layout_width="400px"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"/>
+
+
+    <!--
+    <ImageButton
+        android:id="@+id/camera_freeze_button"
+
+        android:layout_width="10mm"
+
+        android:layout_height="10mm"
+        android:layout_marginTop="10dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/frame_layout"
         android:src="@drawable/freeze_button_selector"
         android:background="@drawable/snowflake_normal"
  />
-    <!-- android:focusable="true"
-        android:focusableInTouchMode="true" -->
+
 
     <TextView
         android:id="@+id/distance_text"
@@ -79,6 +128,13 @@
         android:layout_width="400px"
         android:layout_height="wrap_content"
         android:textColor="@color/white"/>
-    
+
+    <LinearLayout
+        android:layout_width="171dp"
+        android:layout_height="73dp"
+        android:orientation="horizontal"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="550dp"></LinearLayout>
+-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

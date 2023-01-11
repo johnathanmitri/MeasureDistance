@@ -1,70 +1,111 @@
 package com.johnathanmitri.measuredistance;
 
+import static android.content.ContentValues.TAG;
+
+import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraMetadata;
+import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.SizeF;
 import android.view.LayoutInflater;
+import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link OnboardingScreen1#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.camera.camera2.interop.Camera2Interop;
+import androidx.camera.core.AspectRatio;
+import androidx.camera.core.Camera;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.google.android.material.snackbar.Snackbar;
+import com.google.common.util.concurrent.ListenableFuture;
+//import com.johnathanmitri.measuredistance.databinding.FragmentFirstBinding;
+import com.johnathanmitri.measuredistance.databinding.FragmentOnboardingScreen1Binding;
+
+import java.text.DecimalFormat;
+
 public class OnboardingScreen1 extends Fragment
 {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
-
-    public OnboardingScreen1()
-    {
-        // Required empty public constructor
-    }
-
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment OnboardingScreen1.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static OnboardingScreen1 newInstance(String param1, String param2)
-    {
-        OnboardingScreen1 fragment = new OnboardingScreen1();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private FragmentOnboardingScreen1Binding binding;
 
     @Override
-    public void onCreate(Bundle savedInstanceState)
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null)
+        binding = FragmentOnboardingScreen1Binding.inflate(inflater, container, false);
+
+        //DisplayMetrics displayMetrics = new DisplayMetrics();
+        //getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+
+        binding.button.setOnClickListener(new View.OnClickListener()
         {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+            @Override
+            public void onClick(View v)
+            {
+                 FragmentTransaction transaction =  getActivity().getSupportFragmentManager().beginTransaction();
+                 transaction.setCustomAnimations(R.anim.enter_from_right,R.anim.exit_to_left,0,0);//, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
+                 transaction.setReorderingAllowed(true).replace(R.id.fragment_view, OnboardingScreen2.class, null).commit();
+            }
+        });
+
+        return binding.getRoot();
+    }
+
+    public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
+    {
+        super.onViewCreated(view, savedInstanceState);
+    }
+
+
+    @Override
+    public void onDestroyView()
+    {
+        super.onDestroyView();
+        binding = null;
+    }
+
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+
+        //levelView.onResume();
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState)
+    public void onPause()
     {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_onboarding_screen1, container, false);
+        super.onPause();
+
+        //levelView.onPause();
+
     }
+
+
 }

@@ -22,9 +22,6 @@ public class CameraOverlayView extends View
     private final ShapeDrawable line2;
     private final ShapeDrawable line2Inner;
 
-    private final int TOP_LINE = 1;
-    private final int BOT_LINE = 2;
-
     MeasureFragment hostFragment;
 
     int topLinePos = 200;
@@ -33,11 +30,7 @@ public class CameraOverlayView extends View
     int topLinePointerId =-1;
     int botLinePointerId = -1;
 
-
     int trackOffsetFromSide = 100;
-
-    //int circleWidth = 76;
-    //int circleHeight = 76;
 
     int circleRadius = 38;
 
@@ -51,14 +44,9 @@ public class CameraOverlayView extends View
 
     int blue = 0xff00BBF4;
 
-
     int color = Color.WHITE;
     int outlineColor = blue;
 
-    /*
-    int color = Color.BLACK;
-    int outlineColor = blue;
-*/
     public CameraOverlayView(Context context, MeasureFragment hostFragment, int width, int height)
     {
         super(context);
@@ -127,7 +115,6 @@ public class CameraOverlayView extends View
                 topLinePos - lineThickness,
                 width-trackOffsetFromSide-outerLineThickness,
                 topLinePos + lineThickness);
-        //setBoundsByCenter(TOP_LINE);
     }
     private void setBotLinePos(int y)
     {
@@ -156,10 +143,8 @@ public class CameraOverlayView extends View
         line2Inner.setBounds(
                 trackOffsetFromSide+outerLineThickness,
                 botLinePos - lineThickness,
-                width-trackOffsetFromSide   ,
+                width-trackOffsetFromSide,
                 botLinePos + lineThickness);
-
-       // setBoundsByCenter(BOT_LINE);
     }
 
     @Override
@@ -168,7 +153,6 @@ public class CameraOverlayView extends View
 
         int action = event.getActionMasked();
         int index = event.getActionIndex();
-
 
         if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN)
         {
@@ -181,7 +165,6 @@ public class CameraOverlayView extends View
                 if (topLinePointerId == -1)
                 {
                     topLinePointerId = id;
-                    //setLinePos(TOP_LINE,(int)event.getY(index));
                     setTopLinePos((int)event.getY(index));
                 }
             }
@@ -190,7 +173,6 @@ public class CameraOverlayView extends View
                 if (botLinePointerId == -1)
                 {
                     botLinePointerId = id;
-                    //setLinePos(BOT_LINE,(int)event.getY(index));
                     setBotLinePos((int)event.getY(index));
                 }
             }
@@ -203,15 +185,12 @@ public class CameraOverlayView extends View
                 if (topLinePointerId == id)
                 {
                     setTopLinePos((int)event.getY(i));
-                    //setLinePos(TOP_LINE,(int)event.getY(i));
                 }
                 else if (botLinePointerId == id)
                 {
-                    //setLinePos(BOT_LINE,(int)event.getY(i));
                     setBotLinePos((int)event.getY(i));
                 }
             }
-
         }
         else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_POINTER_UP)
         {
@@ -219,12 +198,10 @@ public class CameraOverlayView extends View
             if (topLinePointerId == id)
             {
                 topLinePointerId = -1;
-
             }
             else if (botLinePointerId == id)
             {
                 botLinePointerId = -1;
-
             }
         }
 
@@ -235,7 +212,8 @@ public class CameraOverlayView extends View
         return true;
     }
 
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas canvas)
+    {
         circle1.draw(canvas);
         line1.draw(canvas);
         line1Inner.draw(canvas);

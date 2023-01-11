@@ -22,6 +22,8 @@ import android.media.ImageReader;
 import android.os.Bundle;
 
 import com.google.android.material.snackbar.Snackbar;
+//import com.johnathanmitri.measuredistance.databinding.ActivityMainBinding;
+import com.johnathanmitri.measuredistance.databinding.ActivityMainBinding;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,9 +46,6 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
-//import com.johnathanmitri.measuredistance.databinding.ActivityMainBinding;
-import com.johnathanmitri.measuredistance.databinding.OnboardingPageBinding;
-import com.johnathanmitri.measuredistance.databinding.ContentMainBinding;
 
 import android.view.Menu;
 import android.view.MenuItem;
@@ -67,11 +66,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity
 {
-
     private AppBarConfiguration appBarConfiguration;
-    private ContentMainBinding mainBinding;
-    //private OnboardingPageBinding onboardingBinding;
-    //private
+    private ActivityMainBinding mainBinding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -81,41 +77,21 @@ public class MainActivity extends AppCompatActivity
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        mainBinding = ActivityMainBinding.inflate(getLayoutInflater());
 
-
-
-        SharedPreferences regPrefs = this.getSharedPreferences("preferences", Context.MODE_PRIVATE);
-        boolean isFirstRun = regPrefs.getBoolean("isFirstRun", true);  //default value is true if this value does not exist
+        SharedPreferences prefs = this.getSharedPreferences("preferences", Context.MODE_PRIVATE);
+        boolean isFirstRun = prefs.getBoolean("isFirstRun", true);  //default value is true if this value does not exist
         if (isFirstRun)
         {
-            //startActivity(new Intent(this, OnboardingActivity.class));
-            //onboardingBinding = OnboardingPageBinding.inflate(getLayoutInflater());
-            //setContentView(getLayoutInflater().inflate(R.layout.onboarding_page,null));
-            //setContentView((onboardingBinding.getRoot()));
-
-            onboardingBinding.button.setOnClickListener(new View.OnClickListener()
-            {
-                @Override
-                public void onClick(View v)
-                {
-                    mainBinding = ContentMainBinding.inflate(getLayoutInflater());
-                    setContentView(mainBinding.getRoot());
-                    SharedPreferences.Editor editor = regPrefs.edit();
-                    editor.putBoolean("isFirstRun", false);
-                    editor.apply();
-                }
-            });
+            getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).add(R.id.fragment_view, OnboardingScreen1.class, null).commit();
         }
         else
         {
-            //mainBinding = ContentMainBinding.inflate(getLayoutInflater());
-            //setContentView(mainBinding.getRoot());
-
-            //set fragment to MeasureFragment
+            getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).add(R.id.fragment_view, MeasureFragment.class, null).commit();
         }
 
-        mainBinding = ContentMainBinding.inflate(getLayoutInflater());
         setContentView(mainBinding.getRoot());
+
         //setSupportActionBar(binding.toolbar);
 
        // NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -130,7 +106,7 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu)
     {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
@@ -143,37 +119,33 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings)
+        /*if (id == R.id.action_settings)
         {
             return true;
-        }
+        }*/
 
         return super.onOptionsItemSelected(item);
     }
-
+/*
     @Override
     public boolean onSupportNavigateUp()
     {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp();
-    }
+    }*/
 
     @Override
-    public boolean dispatchKeyEvent(KeyEvent event) {
+    public boolean dispatchKeyEvent(KeyEvent event)
+    {
         int action = event.getAction();
         int keyCode = event.getKeyCode();
-        switch (keyCode) {
+        switch (keyCode)
+        {
             case KeyEvent.KEYCODE_VOLUME_UP:
             case KeyEvent.KEYCODE_VOLUME_DOWN:
-
-
                 if (action == KeyEvent.ACTION_DOWN)
                 {
-                    //Fragment fragment = getFragmentManager().findFragmentById(R.id.FirstFragment);
-                    //fragment.toggleFreeze();
-                    //Intent intent = new Intent("Freeze");
                     LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("freeze_preview"));
-
                 }
                 return true;
             default:
@@ -182,8 +154,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
 
     }
-
 }

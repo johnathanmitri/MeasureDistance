@@ -43,14 +43,15 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.johnathanmitri.measuredistance.databinding.FragmentFirstBinding;
+///import com.johnathanmitri.measuredistance.databinding.FragmentFirstBinding;
+import com.johnathanmitri.measuredistance.databinding.FragmentMeasureBinding;
 
 import java.text.DecimalFormat;
 
 public class MeasureFragment extends Fragment
 {
 
-    private FragmentFirstBinding binding;
+    private FragmentMeasureBinding binding;
 
     private Preview preview;
     private Camera camera;
@@ -71,11 +72,12 @@ public class MeasureFragment extends Fragment
 
     private boolean isFrozen = false;
 
+    LevelView levelView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
     {
-        binding = FragmentFirstBinding.inflate(inflater, container, false);
+        binding = FragmentMeasureBinding.inflate(inflater, container, false);
 
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -84,6 +86,15 @@ public class MeasureFragment extends Fragment
         viewportHeight = (int)(viewportWidth * (4.0/3.0));
 
         binding.frameLayout.getLayoutParams().height = viewportHeight;
+
+        binding.getRoot().post(new Runnable() {
+            @Override
+            public void run() {
+                levelView = new LevelView(getContext(), binding.levelViewFrame.getWidth(), binding.levelViewFrame.getHeight());
+                levelView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+                binding.levelViewFrame.addView(levelView);
+            }
+        });
 
         return binding.getRoot();
     }
@@ -104,10 +115,11 @@ public class MeasureFragment extends Fragment
     {
         if (!isFrozen)
         {
+
             //binding.cameraFreezeButton.setImageResource(R.drawable.snowflake_frozen);
             binding.cameraFreezeButton.setImageDrawable(snowflakeFrozen);
             cameraProvider.unbind(preview);
-
+            levelView.pause();
 
             Bitmap freezeFrame = binding.viewFinder.getBitmap();
             binding.viewFinder.setVisibility(View.GONE);
@@ -125,6 +137,8 @@ public class MeasureFragment extends Fragment
             binding.viewFinder.setVisibility(View.VISIBLE);
 
             camera = cameraProvider.bindToLifecycle(getActivity(), cameraSelector, preview);
+
+            levelView.resume();
         }
         isFrozen = !isFrozen;
     }
@@ -222,10 +236,8 @@ public class MeasureFragment extends Fragment
         binding.frameLayout.addView(cameraOverlayView);
 
 
-        /*GLSurfaceView overlayView = new CameraOverlayView(getContext());
-        overlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-        binding.frameLayout.addView(overlayView);
-*/
+
+
 
 
     }
@@ -337,6 +349,8 @@ public class MeasureFragment extends Fragment
     public void onResume()
     {
         super.onResume();
+
+
 
         //levelView.onResume();
     }
