@@ -7,6 +7,7 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.graphics.drawable.shapes.RectShape;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -32,7 +33,8 @@ public class CameraOverlayView extends View
 
     int trackOffsetFromSide = 100;
 
-    int circleRadius = 38;
+    int circleRadius;  // = 38;
+    int circleRadiusDp = 18; //this is 18dp
 
     int lineThickness = 1;  //inner line adds this much thickness to the single pixel in the center.
     int outerLineThickness = 2;  //outer line adds this much thickness
@@ -40,7 +42,7 @@ public class CameraOverlayView extends View
     int width;
     int height;
 
-    int minSeparation = circleRadius + outerLineThickness*2 + 4;
+    int minSeparation;
 
     int blue = 0xff00BBF4;
 
@@ -55,6 +57,12 @@ public class CameraOverlayView extends View
 
         this.width = width;
         this.height = height;
+
+        circleRadius = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, circleRadiusDp, getResources().getDisplayMetrics());//12 * (getResources().getDisplayMetrics().densityDpi/160);
+
+        minSeparation = circleRadius + outerLineThickness*2 + 4;
+
+        Log.d("CIRCLE RADIUS: ", String.valueOf(circleRadius));
 
         circle1 = new ShapeDrawable(new OvalShape());
         circle1.getPaint().setColor(outlineColor);
@@ -82,6 +90,7 @@ public class CameraOverlayView extends View
 
         setTopLinePos((int)(0.25 * height));
         setBotLinePos((int)(0.75 * height));
+
 
         hostFragment.objectResized(topLinePos, botLinePos);
     }

@@ -3,6 +3,7 @@ package com.johnathanmitri.measuredistance;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RectShape;
 import android.hardware.Sensor;
@@ -12,6 +13,7 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 
 import java.text.DecimalFormat;
@@ -22,18 +24,23 @@ import java.util.Arrays;
 public class LevelView extends View implements SensorEventListener
 {
     private final ShapeDrawable levelLine;
-
     private final ShapeDrawable anchorLine;
+    private final Paint textPaint;
+    //private final ShapeDrawable labelText;
 
     MeasureFragment hostFragment;
 
-    //int levelLinePos = 200;
     int anchorLinePos;
+    int textXPos;
+    int textYPos;
 
     double smoothedTiltValue = 0;
 
     int width;
     int height;
+
+    int lineThickness = 4;
+    int textSizeDp = 12;
 
     boolean paused = false;
 
@@ -41,7 +48,6 @@ public class LevelView extends View implements SensorEventListener
 
     int color = Color.WHITE;
     int outlineColor = blue;
-
 
     Handler handler = new Handler();
     Runnable runnable;
@@ -55,10 +61,6 @@ public class LevelView extends View implements SensorEventListener
     private final float[] adjustedRotationMatrix = new float[9];
     private final float[] orientationAngles = new float[3];
 
-    /*
-    int color = Color.BLACK;
-    int outlineColor = blue;
-*/
     public LevelView(Context context, int width, int height)
     {
         super(context);
@@ -72,6 +74,16 @@ public class LevelView extends View implements SensorEventListener
         anchorLine = new ShapeDrawable(new RectShape());
         anchorLine.getPaint().setColor(color);
 
+        textPaint = new Paint();
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, textSizeDp, getResources().getDisplayMetrics())); //equivalent of 12dp
+//        textPaint.setAntiAlias(true);
+//        textPaint.setFakeBoldText(true);
+//        textPaint.setShadowLayer(6f, 0, 0, Color.BLACK);
+        textPaint.setStyle(Paint.Style.FILL);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+
+        //labelText = new ShapeDrawable(new Text)
     }
 
     @Override
@@ -79,29 +91,26 @@ public class LevelView extends View implements SensorEventListener
     {
         super.onAttachedToWindow();
 
-
-//        this.width = width;
-//        this.height = height;
-        //this.width = getWidth();
-        //this.height = this.getLayoutParams().height;
-
-
         anchorLinePos = (int)(0.5 * height);
 
-        anchorLine.setBounds(
+        /*anchorLine.setBounds(
                 (int)(width*0.75),
-                anchorLinePos - 1,
+                anchorLinePos - lineThickness,
                 width,
-                anchorLinePos + 1);
+                anchorLinePos + lineThickness);*/
 
+        anchorLine.setBounds(
+                0,
+                anchorLinePos - lineThickness,
+                (int)(width*0.25),
+                anchorLinePos + lineThickness);
+
+        textXPos = (int)(width*0.125);
+        textYPos = anchorLinePos - lineThickness-8;
 
         sensorManager = (SensorManager) getContext().getSystemService(Context.SENSOR_SERVICE);
 
         this.resume();
-
-
-
-        //this.onResume();
     }
 
 
@@ -112,39 +121,11 @@ public class LevelView extends View implements SensorEventListener
 
         SensorManager.getOrientation(adjustedRotationMatrix, orientationAngles);
 
-        //Tilt(orientationAngles[0], orientationAngles[1], orientationAngles[2]);
-        /*if (smoothedTiltValue1 == null)
-        {
-
-        }*/
-
-        smoothedTiltValue += (orientationAngles[1] - smoothedTiltValue) / 20f;
-        //smoothedTiltValue1 = (orientationAngles[1]+ 19*smoothedTiltValue1)/20f;
-        //smoothedTiltValue2 += (orientationAngles[2] - smoothedTiltValue2) / 3.0f;
-
-        // -90 degrees is the vertical position.
-        /*double[] oAngles = new double[3];
-        oAngles[0] = Math.toDegrees(orientationAngles[0]);
-        oAngles[1] = Math.toDegrees(orientationAngles[1]);
-        oAngles[2] = Math.toDegrees(orientationAngles[2]);*/
-
-        //orientationAngles[1] *= (orientationAngles[0] >= 0 ? -1 : 1);
+        smoothedTiltValue += (orientationAngles[1] - smoothedTiltValue) / 15f; //smooth out the values so it doesnt look so erratic
 
         double diffFromVertical = Math.toDegrees(smoothedTiltValue);
 
-        //diffFromVertical = 0;
-
-
-
-        String output = "";
-        //for (int i = 0; i < orientationAngles.length; i++)
-        //{
-        //    output += "["+ i + "]:  " + orientationAngles[i] + "  ";
-        //}
-        //Log.d("ANGLE 0", output);
-        //Log.d("ANGLE ", "ANGLE: " + diffFromVertical);
-
-        //the level view will have a range of -20 degrees to 20 degrees away from vertical
+        //the level view will have a range of -60 degrees to 60 degrees away from vertical
         double distanceMultiplier = diffFromVertical / 60;
 
         //max values for the multiplier to prevent the level from being outside the view.
@@ -157,11 +138,17 @@ public class LevelView extends View implements SensorEventListener
         distanceMultiplier/=2; //range is now [0,1]
 
         int pos = (int)(distanceMultiplier * height);  //Distance from vertical.
-        levelLine.setBounds(
+        /*levelLine.setBounds(
                 (int)(width*0.5),
-                pos - 1,
+                pos - lineThickness,
                 (int)(width * 0.75),
-                pos + 1);
+                pos + lineThickness);
+*/
+        levelLine.setBounds(
+                (int)(width*0.25),
+                pos - lineThickness,
+                (int)(width * 0.5),
+                pos + lineThickness);
 
         this.invalidate();
     }
@@ -222,6 +209,7 @@ public class LevelView extends View implements SensorEventListener
 
         levelLine.draw(canvas);
         anchorLine.draw(canvas);
+        canvas.drawText("Level", textXPos, textYPos, textPaint);
     }
 
 

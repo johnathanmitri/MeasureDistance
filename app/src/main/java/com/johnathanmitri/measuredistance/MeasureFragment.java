@@ -25,6 +25,8 @@ import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -47,6 +49,8 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.johnathanmitri.measuredistance.databinding.FragmentMeasureBinding;
 
 import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.List;
 
 public class MeasureFragment extends Fragment
 {
@@ -57,6 +61,11 @@ public class MeasureFragment extends Fragment
     private Camera camera;
     private ProcessCameraProvider cameraProvider;
     CameraSelector cameraSelector;
+
+    private final String[] units = {"ft", "in", "m", "cm", "yd", "mi", "km"};
+    private final double[] conversionFactors = { 1, 12, 0.3048, 30.48, 1.0/3, 1.0/5280, 0.0003048};
+
+    //base unit is ft. ft to inch: ft * 12;
 
     private int viewportWidth;
     private int viewportHeight;
@@ -143,10 +152,13 @@ public class MeasureFragment extends Fragment
         isFrozen = !isFrozen;
     }
 
-    public void objectResized(int topLinePos, int botLinePos) {
+    public void objectResized(int topLinePos, int botLinePos)
+    {
         lastObjectSizePixels = botLinePos - topLinePos;
         calculateDistance();
     }
+
+    //Calculates and updates the Distance displayed on screen
     public void calculateDistance()
     {
         //Calculate the maximum size object the camera can see at this distance. This would be the same as the height of the object if that object filled up the entire screen.
@@ -156,8 +168,15 @@ public class MeasureFragment extends Fragment
 
         double distance = (cameraViewHeightInUnits / 2) / halfFovTangent;
 
-        String units = "ft";
-        binding.distanceText.setText("Distance: " +  new DecimalFormat("#.##").format(distance) + units);
+
+
+        int unit1 = binding.inputUnitsSpinner.getSelectedItemPosition();    //value is currently in this unit
+        int unit2 = binding.distanceUnitsSpinner.getSelectedItemPosition();
+
+        if (unit1 != unit2)
+            distance = (distance / conversionFactors[unit1]) * conversionFactors[unit2];
+
+        binding.distanceText.setText(new DecimalFormat("#.##").format(distance));
     }
 
     private ActivityResultLauncher<String> requestPermissionLauncher =
@@ -165,6 +184,7 @@ public class MeasureFragment extends Fragment
                 if (isGranted)
                 {
                     setUpCamera();
+                    calculateDistance();
                 }
                 else
                 {
@@ -222,7 +242,6 @@ public class MeasureFragment extends Fragment
             if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA))
             {
                 //TODO: EXPLAIN
-               // Snackbar.make(getView(), "Permission is needed to access camera.", 4);
                 Toast.makeText(getContext(),"Permission is needed to access camera.", Toast.LENGTH_LONG).show();
             }
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
@@ -231,15 +250,46 @@ public class MeasureFragment extends Fragment
             setUpCamera();
 
 
+
+        /*binding.inputUnitsSpinner.setOnItemClickListener(new AdapterView.OnItemClickListener()
+        {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+
+            }
+        });*/
+
+        AdapterView.OnItemSelectedListener listener = new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id)
+            {
+                calculateDistance();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+        };
+
+        binding.inputUnitsSpinner.setOnItemSelectedListener(listener);
+        binding.distanceUnitsSpinner.setOnItemSelectedListener(listener);
+
+
+        ArrayAdapter ad = new ArrayAdapter(getContext(), android.R.layout.simple_spinner_item, units);
+        ArrayAdapter adLarge = new ArrayAdapter(getContext(), R.layout.large_spinner_item, units);
+
+        ad.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adLarge.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        binding.inputUnitsSpinner.setAdapter(ad);
+        binding.distanceUnitsSpinner.setAdapter(adLarge);
+
+
         CameraOverlayView cameraOverlayView = new CameraOverlayView(getContext(), this, viewportWidth, viewportHeight);
         cameraOverlayView.setLayoutParams(new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         binding.frameLayout.addView(cameraOverlayView);
-
-
-
-
-
-
     }
 
     private float[] calculateFOV(CameraManager cManager) {
@@ -249,8 +299,8 @@ public class MeasureFragment extends Fragment
                 int cOrientation = characteristics. get(CameraCharacteristics. LENS_FACING );
                 if (cOrientation == CameraCharacteristics. LENS_FACING_BACK )
                 {
-                    float [] maxFocus = characteristics. get(CameraCharacteristics. LENS_INFO_AVAILABLE_FOCAL_LENGTHS );
-                    SizeF size = characteristics.get(CameraCharacteristics. SENSOR_INFO_PHYSICAL_SIZE );
+                    float [] maxFocus = characteristics. get(CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS );
+                    SizeF size = characteristics.get(CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE );
                     float w = size. getWidth();
                     float h = size. getHeight();
 
@@ -260,9 +310,10 @@ public class MeasureFragment extends Fragment
                     return result;
                 }
             }
-        } catch (CameraAccessException e) { e.
-                printStackTrace();
-
+        }
+        catch (CameraAccessException e)
+        {
+            e.printStackTrace();
         }
         return null;
     }
@@ -307,7 +358,6 @@ public class MeasureFragment extends Fragment
         previewBuilder.setTargetRotation(rotation);
 
         Camera2Interop.Extender camera2InterOp = new Camera2Interop.Extender(previewBuilder);
-        //@androidx.camera.camera2.interop.ExperimentalCamera2Interop
 
         camera2InterOp.setCaptureRequestOption(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_OFF);
 
@@ -316,13 +366,7 @@ public class MeasureFragment extends Fragment
 
         preview = previewBuilder.build();
 
-        // Must unbind the use-cases before rebinding them
         cameraProvider.unbindAll();
-
-        /*if (camera != null)
-        {
-           removeCameraStateObservers(camera.cameraInfo);
-        }*/
 
         try
         {
