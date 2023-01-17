@@ -1,8 +1,20 @@
 <resources>
     <string name="app_name">Measure Distance</string>
 
-    <string name="how_to_text">Will this
-    do what i
-    expect it to do??
+    <string name="how_to_text">
+
+\n\n
+        1.) Enter the objects height
+\n\n
+        2.) Choose the units
+\n\n
+        3.) Point the camera at the object
+\n\n
+        4.) Make sure the device is level
+\n\n
+        5.) Press the freeze button
+\n\n
+        6.) Select the top and bottom of the object on screen
+
     </string>
 </resources>

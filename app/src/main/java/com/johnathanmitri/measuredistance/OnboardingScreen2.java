@@ -64,6 +64,10 @@ public class OnboardingScreen2 extends Fragment
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
+        //set the height based on the width. it should fill out the whole width of the screen, but maintain aspect ratio.
+        binding.imageView.getLayoutParams().height = (int)(displayMetrics.widthPixels * (1600.0/1450.0));  //the demonstration png is 1600 x 1450.
+        binding.imageView.requestLayout();
+
         binding.button.setOnClickListener(new View.OnClickListener()
         {
             @Override
