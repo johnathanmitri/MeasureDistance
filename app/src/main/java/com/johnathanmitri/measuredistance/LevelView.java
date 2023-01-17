@@ -10,15 +10,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
 import android.os.Handler;
-import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
-
-import java.text.DecimalFormat;
-import java.util.Arrays;
-
 
 //This is for a level that displays the orientation of the device to help the user keep the device perfectly vertical.
 public class LevelView extends View implements SensorEventListener
@@ -26,9 +20,6 @@ public class LevelView extends View implements SensorEventListener
     private final ShapeDrawable levelLine;
     private final ShapeDrawable anchorLine;
     private final Paint textPaint;
-    //private final ShapeDrawable labelText;
-
-    MeasureFragment hostFragment;
 
     int anchorLinePos;
     int textXPos;
@@ -42,7 +33,7 @@ public class LevelView extends View implements SensorEventListener
     int lineThickness = 4;
     int textSizeDp = 12;
 
-    boolean paused = false;
+    boolean paused = true;
 
     int blue = 0xff00BBF4;
 
@@ -51,7 +42,7 @@ public class LevelView extends View implements SensorEventListener
 
     Handler handler = new Handler();
     Runnable runnable;
-    int orientationRefreshInterval = 10; // milliseconds
+    int orientationRefreshInterval = 10 * 1000; // microseconds
 
     private SensorManager sensorManager;
     private final float[] accelerometerReading = new float[3];
@@ -77,13 +68,9 @@ public class LevelView extends View implements SensorEventListener
         textPaint = new Paint();
         textPaint.setColor(Color.WHITE);
         textPaint.setTextSize(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, textSizeDp, getResources().getDisplayMetrics())); //equivalent of 12dp
-//        textPaint.setAntiAlias(true);
-//        textPaint.setFakeBoldText(true);
-//        textPaint.setShadowLayer(6f, 0, 0, Color.BLACK);
         textPaint.setStyle(Paint.Style.FILL);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
-        //labelText = new ShapeDrawable(new Text)
     }
 
     @Override
@@ -92,12 +79,6 @@ public class LevelView extends View implements SensorEventListener
         super.onAttachedToWindow();
 
         anchorLinePos = (int)(0.5 * height);
-
-        /*anchorLine.setBounds(
-                (int)(width*0.75),
-                anchorLinePos - lineThickness,
-                width,
-                anchorLinePos + lineThickness);*/
 
         anchorLine.setBounds(
                 0,
@@ -121,7 +102,7 @@ public class LevelView extends View implements SensorEventListener
 
         SensorManager.getOrientation(adjustedRotationMatrix, orientationAngles);
 
-        smoothedTiltValue += (orientationAngles[1] - smoothedTiltValue) / 15f; //smooth out the values so it doesnt look so erratic
+        smoothedTiltValue += (orientationAngles[1] - smoothedTiltValue) / 25f; //smooth out the values so it doesnt look so erratic
 
         double diffFromVertical = Math.toDegrees(smoothedTiltValue);
 
@@ -137,13 +118,8 @@ public class LevelView extends View implements SensorEventListener
         distanceMultiplier+=1; //shift the range to [0,2]
         distanceMultiplier/=2; //range is now [0,1]
 
-        int pos = (int)(distanceMultiplier * height);  //Distance from vertical.
-        /*levelLine.setBounds(
-                (int)(width*0.5),
-                pos - lineThickness,
-                (int)(width * 0.75),
-                pos + lineThickness);
-*/
+        int pos = (int)(distanceMultiplier * height);  // This gives the Y position in the view
+
         levelLine.setBounds(
                 (int)(width*0.25),
                 pos - lineThickness,
@@ -153,39 +129,29 @@ public class LevelView extends View implements SensorEventListener
         this.invalidate();
     }
 
-
-
     public void resume()
     {
+        if (!paused)
+            return;
+
         paused = false;
 
-        handler.postDelayed(runnable = new Runnable()
-        {
-            public void run()
-            {
-                if (!paused)
-                {
-                    handler.postDelayed(runnable, orientationRefreshInterval);
-                    updateOrientationAngles();
-                }
-            }
-        }, orientationRefreshInterval);
-
-
+        // register listener
         Sensor accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (accelerometer != null) {
             sensorManager.registerListener(this, accelerometer,
-                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+                    orientationRefreshInterval);
         }
         Sensor magneticField = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (magneticField != null) {
             sensorManager.registerListener(this, magneticField,
-                    SensorManager.SENSOR_DELAY_UI, SensorManager.SENSOR_DELAY_UI);
+                    orientationRefreshInterval);
         }
     }
 
     public void pause()
     {
+        // stop getting updated values
         sensorManager.unregisterListener(this);
         paused = true;
     }
@@ -193,11 +159,14 @@ public class LevelView extends View implements SensorEventListener
     @Override
     public void onSensorChanged(SensorEvent event)
     {
+        // every time the system gives us new sensor values, we read them into the arrays
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             System.arraycopy(event.values, 0, accelerometerReading, 0, accelerometerReading.length);
         } else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
             System.arraycopy(event.values, 0, magnetometerReading, 0, magnetometerReading.length);
         }
+        updateOrientationAngles();
+
     }
 
     @Override
@@ -205,13 +174,12 @@ public class LevelView extends View implements SensorEventListener
 
     }
 
-    protected void onDraw(Canvas canvas) {
-
+    protected void onDraw(Canvas canvas)
+    {
         levelLine.draw(canvas);
         anchorLine.draw(canvas);
+        // a little label that displays above the anchored line
         canvas.drawText("Level", textXPos, textYPos, textPaint);
     }
-
-
 }
 

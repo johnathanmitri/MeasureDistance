@@ -23,7 +23,7 @@ public class CameraOverlayView extends View
     private final ShapeDrawable line2;
     private final ShapeDrawable line2Inner;
 
-    MeasureFragment hostFragment;
+    MeasureFragment measureFragment;
 
     int topLinePos = 200;
     int botLinePos = 400;
@@ -34,7 +34,8 @@ public class CameraOverlayView extends View
     int trackOffsetFromSide = 100;
 
     int circleRadius;  // = 38;
-    int circleRadiusDp = 18; //this is 18dp
+    //int circleRadiusDp = 18; //this is 18dp
+    int circleRadiusMm = 3; //this is 3mm
 
     int lineThickness = 1;  //inner line adds this much thickness to the single pixel in the center.
     int outerLineThickness = 2;  //outer line adds this much thickness
@@ -53,16 +54,20 @@ public class CameraOverlayView extends View
     {
         super(context);
 
-        this.hostFragment = hostFragment;
+        this.measureFragment = hostFragment;
 
         this.width = width;
         this.height = height;
 
-        circleRadius = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, circleRadiusDp, getResources().getDisplayMetrics());//12 * (getResources().getDisplayMetrics().densityDpi/160);
+        int dpi = getResources().getDisplayMetrics().densityDpi;
+        //circleRadius = (int)((float)circleRadiusDp * (getResources().getDisplayMetrics().densityDpi / 160.0));
+        //circleRadius = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, circleRadiusDp, getResources().getDisplayMetrics());
 
+        //convert from millimeter to pixels. this way the overlay circles are the same size on every screen.
+        circleRadius = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, circleRadiusMm, getResources().getDisplayMetrics());
+
+        //minimum distance between the two lines, to prevent overlapping with the circle of the other line.
         minSeparation = circleRadius + outerLineThickness*2 + 4;
-
-        Log.d("CIRCLE RADIUS: ", String.valueOf(circleRadius));
 
         circle1 = new ShapeDrawable(new OvalShape());
         circle1.getPaint().setColor(outlineColor);
@@ -91,16 +96,16 @@ public class CameraOverlayView extends View
         setTopLinePos((int)(0.25 * height));
         setBotLinePos((int)(0.75 * height));
 
-
-        hostFragment.objectResized(topLinePos, botLinePos);
+        //call fragment
+        measureFragment.objectResized(topLinePos, botLinePos);
     }
 
     private void setTopLinePos(int y)
     {
-        if (y > botLinePos - minSeparation)  //if top is being moved too low
+        if (y > botLinePos - minSeparation)  // if the top line is being moved onto/past the bottom line, set its position right above the bottom line
             topLinePos = botLinePos - minSeparation;
         else if (y < 0)
-            topLinePos = 0;
+            topLinePos = 0;  //if the top line is being moved past the top of the screen, set it to the top
         else
             topLinePos = y;
 
@@ -127,13 +132,15 @@ public class CameraOverlayView extends View
     }
     private void setBotLinePos(int y)
     {
-        if (y < topLinePos + minSeparation)  //if bot is being moved too high
+        if (y < topLinePos + minSeparation)  // if the bottom line is being moved onto/past the top line, set its position right below the top line
             botLinePos = topLinePos + minSeparation;
-        else if (y > height)
+        else if (y > height)  //if the bottom line is being moved past the bottom of the screen, set it to the bottom
             botLinePos = height;
         else
             botLinePos = y;
 
+        //set the bounds of the shapes based on the positions set by the user's finger.
+        //compiler optimizations should optimize these calculations
         circle2.setBounds(
                 width - trackOffsetFromSide - circleRadius,
                 botLinePos - circleRadius,
@@ -143,7 +150,7 @@ public class CameraOverlayView extends View
                 width - trackOffsetFromSide - circleRadius + outerLineThickness*2,
                 botLinePos - circleRadius + outerLineThickness*2,
                 width - trackOffsetFromSide + circleRadius- outerLineThickness*2,
-                botLinePos + circleRadius- outerLineThickness*2);
+                botLinePos + circleRadius - outerLineThickness*2);
         line2.setBounds(
                 trackOffsetFromSide,
                 botLinePos - lineThickness - outerLineThickness,
@@ -214,8 +221,10 @@ public class CameraOverlayView extends View
             }
         }
 
-        hostFragment.objectResized(topLinePos, botLinePos);
+        //re-calculate the distance and display it on MeasureFragment
+        measureFragment.objectResized(topLinePos, botLinePos);
 
+        //redraw the view.
         this.invalidate();
 
         return true;
@@ -223,6 +232,9 @@ public class CameraOverlayView extends View
 
     protected void onDraw(Canvas canvas)
     {
+        //outer circle drawn first, so that the line can overlap over it.
+        //inner circle drawn last to cover up the line.
+
         circle1.draw(canvas);
         line1.draw(canvas);
         line1Inner.draw(canvas);

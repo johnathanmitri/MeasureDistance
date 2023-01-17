@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.ImageFormat;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -35,10 +36,13 @@ import android.util.Log;
 import android.util.Size;
 import android.util.SparseIntArray;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.TextureView;
 import android.view.View;
 
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.appcompat.widget.AppCompatEditText;
 import androidx.core.app.ActivityCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.navigation.NavController;
@@ -51,7 +55,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.File;
@@ -72,6 +78,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        //set app to be dark mode so all views behave properly
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -83,57 +91,20 @@ public class MainActivity extends AppCompatActivity
         boolean isFirstRun = prefs.getBoolean("isFirstRun", true);  //default value is true if this value does not exist
         if (isFirstRun)
         {
+            //show the onboarding screen if this is the first run
             getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).add(R.id.fragment_view, OnboardingScreen1.class, null).commit();
         }
         else
         {
+            //show the main screen if this is not the first run
             getSupportFragmentManager().beginTransaction().setReorderingAllowed(true).add(R.id.fragment_view, MeasureFragment.class, null).commit();
         }
 
         setContentView(mainBinding.getRoot());
-
-        //setSupportActionBar(binding.toolbar);
-
-       // NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-       // appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-       // NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
-
     }
 
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu)
-    {
-        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        /*if (id == R.id.action_settings)
-        {
-            return true;
-        }*/
-
-        return super.onOptionsItemSelected(item);
-    }
-/*
-    @Override
-    public boolean onSupportNavigateUp()
-    {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp();
-    }*/
-
+    // Capture Volume key presses to freeze camera
     @Override
     public boolean dispatchKeyEvent(KeyEvent event)
     {
@@ -145,12 +116,37 @@ public class MainActivity extends AppCompatActivity
             case KeyEvent.KEYCODE_VOLUME_DOWN:
                 if (action == KeyEvent.ACTION_DOWN)
                 {
-                    LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("freeze_preview"));
+                    if (event.getRepeatCount() == 0)  //only process this event once
+                        LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("freeze_preview"));
+                    return true;
                 }
-                return true;
             default:
-                return super.dispatchKeyEvent(event);
         }
+        return super.dispatchKeyEvent(event);
+    }
+
+    // If screen is touched, remove focus from the EditText.
+    // EditText kept blinking even after another view is interacted with, so this is the fix.
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_DOWN) {
+            View v = getCurrentFocus();
+            //if the view with focus is an EditText
+            if ( v instanceof EditText || v instanceof AppCompatEditText)
+            {
+                Rect outRect = new Rect();
+                v.getGlobalVisibleRect(outRect);
+                //if the click wasn't on that EditText
+                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY()))
+                {
+                    //remove focus and hide the keyboard
+                    v.clearFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+                }
+            }
+        }
+        return super.dispatchTouchEvent( event );
     }
 
     @Override

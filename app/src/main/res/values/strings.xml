@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Measure Distance</string>
+
+    <string name="how_to_text">Will this
+    do what i
+    expect it to do??
+    </string>
 </resources>
