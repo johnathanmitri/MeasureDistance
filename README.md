@@ -5,7 +5,7 @@ Native Android app written in Java.
 
 CS 4750 Project
 
-Tested on Google Pixel 6a, Galaxy A50, and Galaxy J3.
+Tested on Pixel 6a, Galaxy A50, and Galaxy J3.
 
 I had around 2.5% error
 
