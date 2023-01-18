@@ -3,7 +3,7 @@ Measures distance from an object using the camera
 
 Native Android app written in Java.
 
-CS 4750
+CS 4750 Project
 
 ![demonstration](https://user-images.githubusercontent.com/28831749/213052375-149ec79d-8157-4062-b801-f5f6791f47b2.png)
 
