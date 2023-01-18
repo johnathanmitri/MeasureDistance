@@ -65,12 +65,14 @@ public class MeasureFragment extends Fragment
     private Bitmap freezeFrame;
 
     private float verticalCameraFOV;
-    private double halfFovTangent;
     private double lastObjectSizePixels;
 
     private double objectHeightInUnits = 10;
 
     private boolean isFrozen = false;
+    private boolean isZoomed = false;
+    private boolean freezeZoomed = false;
+    private float zoomRatio = 3;
 
     LevelView levelView;
 
@@ -99,6 +101,8 @@ public class MeasureFragment extends Fragment
         });
         return binding.getRoot();
     }
+
+
 
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState)
     {
@@ -190,6 +194,25 @@ public class MeasureFragment extends Fragment
         binding.frameLayout.addView(cameraOverlayView);
     }
 
+    // handle double tap from CameraOverlayView
+    public void toggleZoom()
+    {
+        if (!isFrozen)
+        {
+            isZoomed = !isZoomed;
+            camera.getCameraControl().setZoomRatio( isZoomed ? zoomRatio : 1); // set zoom to 3 or 1
+        }
+        else  //if it is frozen, only allow zooming if it wasnt previously zoomed.
+        {
+            if (!isZoomed)
+            {
+                freezeZoomed = !freezeZoomed;
+                binding.freezePreview.setScaleX( freezeZoomed ? zoomRatio : 1 ); // set zoom to 3 or 1
+                binding.freezePreview.setScaleY( freezeZoomed ? zoomRatio : 1 );
+            }
+        }
+    }
+
     private void toggleFreeze()
     {
         if (!isFrozen)
@@ -202,6 +225,11 @@ public class MeasureFragment extends Fragment
             //Freeze levelView
             levelView.pause();
 
+            //set freeze view to be unzoomed
+            freezeZoomed = false;
+            
+            binding.freezePreview.setScaleX(1);
+            binding.freezePreview.setScaleY(1);
             //Bitmap to save the last frame before preview was frozen. Without it the last frame is lost when the app is paused
             freezeFrame = binding.viewFinder.getBitmap();
             //Hide the preview
@@ -209,6 +237,7 @@ public class MeasureFragment extends Fragment
 
             //display the last frame
             binding.freezePreview.setImageBitmap(freezeFrame);
+
             binding.freezePreview.setVisibility(View.VISIBLE);
         }
         else
@@ -222,7 +251,9 @@ public class MeasureFragment extends Fragment
             //show the preview
             binding.viewFinder.setVisibility(View.VISIBLE);
             //restart the camera
+
             camera = cameraProvider.bindToLifecycle(getActivity(), cameraSelector, preview);
+            camera.getCameraControl().setZoomRatio( isZoomed ? zoomRatio : 1);
 
             //Resume levelView
             levelView.resume();
@@ -267,6 +298,13 @@ public class MeasureFragment extends Fragment
         // This would be the same as the height of the object if that object filled up the entire screen.
         double cameraViewHeightInUnits = objectHeightInUnits * ((double)viewportHeight / lastObjectSizePixels);
 
+
+        double FovAfterZoom = verticalCameraFOV;
+        if (isZoomed || freezeZoomed)
+            FovAfterZoom/=zoomRatio;
+        //Tangent of half the angle. This is equal to Opp/Adj, which is (h/2) / distance
+        double halfFovTangent = Math.tan(Math.toRadians(FovAfterZoom/2));
+
         // Distance from the object in the same units as the height
         double distance = (cameraViewHeightInUnits / 2) / halfFovTangent;
 
@@ -306,9 +344,6 @@ public class MeasureFragment extends Fragment
 
         verticalCameraFOV = camera.getParameters().getHorizontalViewAngle(); //"horizontal" as if camera were landscape.
         camera.release();
-
-        //Tangent of half the angle. This is equal to Opp/Adj, which is (h/2) / distance
-        halfFovTangent = Math.tan(Math.toRadians(verticalCameraFOV/2));
 
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext());
         cameraProviderFuture.addListener(new Runnable()
@@ -377,6 +412,10 @@ public class MeasureFragment extends Fragment
         // if preview is frozen then it should remain paused
         if (levelView != null && !isFrozen)
             levelView.resume();
+
+        // restore zoom on resume
+        if (camera != null)
+            camera.getCameraControl().setZoomRatio( isZoomed ? zoomRatio : 1);
     }
 
     @Override

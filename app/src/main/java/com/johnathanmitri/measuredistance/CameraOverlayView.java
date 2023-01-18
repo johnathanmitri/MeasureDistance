@@ -28,6 +28,9 @@ public class CameraOverlayView extends View
     int topLinePos = 200;
     int botLinePos = 400;
 
+    final long doubleClickTime = 300; //300ms
+    long lastClickTime = 0;
+
     int topLinePointerId =-1;
     int botLinePointerId = -1;
 
@@ -187,6 +190,16 @@ public class CameraOverlayView extends View
                     botLinePointerId = id;
                     setBotLinePos((int)event.getY(index));
                 }
+            }
+            else  //neither was touched intentionally. listen for double tap zooming
+            {
+                long clickTime = System.currentTimeMillis();
+                if (clickTime - lastClickTime < doubleClickTime) {
+                    measureFragment.toggleZoom();
+                    lastClickTime = 0;  //to prevent triple tap from registering as two doubl taps
+                }
+                else
+                    lastClickTime = clickTime;
             }
         }
         else if (action == MotionEvent.ACTION_MOVE)
