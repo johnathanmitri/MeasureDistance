@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity
                 Rect outRect = new Rect();
                 v.getGlobalVisibleRect(outRect);
                 //if the click wasn't on that EditText
-                if (!outRect.contains((int)event.getRawX(), (int)event.getRawY()))
+                if (!outRect.contains((int)event.getX(), (int)event.getY()))
                 {
                     //remove focus and hide the keyboard
                     v.clearFocus();
