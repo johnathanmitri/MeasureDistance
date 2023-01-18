@@ -59,10 +59,6 @@ public class CameraOverlayView extends View
         this.width = width;
         this.height = height;
 
-        int dpi = getResources().getDisplayMetrics().densityDpi;
-        //circleRadius = (int)((float)circleRadiusDp * (getResources().getDisplayMetrics().densityDpi / 160.0));
-        //circleRadius = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, circleRadiusDp, getResources().getDisplayMetrics());
-
         //convert from millimeter to pixels. this way the overlay circles are the same size on every screen.
         circleRadius = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_MM, circleRadiusMm, getResources().getDisplayMetrics());
 

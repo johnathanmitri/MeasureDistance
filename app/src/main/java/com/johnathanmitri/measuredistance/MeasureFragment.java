@@ -8,16 +8,12 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CameraMetadata;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
-import android.util.SizeF;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
@@ -45,6 +41,7 @@ import com.johnathanmitri.measuredistance.databinding.FragmentMeasureBinding;
 
 import java.text.DecimalFormat;
 
+// this is the main screen
 public class MeasureFragment extends Fragment
 {
     private FragmentMeasureBinding binding;

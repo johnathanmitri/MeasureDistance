@@ -102,7 +102,7 @@ public class LevelView extends View implements SensorEventListener
 
         SensorManager.getOrientation(adjustedRotationMatrix, orientationAngles);
 
-        smoothedTiltValue += (orientationAngles[1] - smoothedTiltValue) / 25f; //smooth out the values so it doesnt look so erratic
+        smoothedTiltValue += (orientationAngles[1] - smoothedTiltValue) / 25f; //smooth out the values so it doesn't look erratic
 
         double diffFromVertical = Math.toDegrees(smoothedTiltValue);
 
