@@ -4,12 +4,13 @@ Measures distance from an object using the camera
 Native Android app written in Java.
 
 CS 4750 Project
+# [Release APK](https://github.com/johnathanmitri/MeasureDistance/releases/latest)
 
 Tested on Pixel 6a, Galaxy A50, and Galaxy J3.
 
 I had around 2.5% error
 
-[Release APK](https://github.com/johnathanmitri/MeasureDistance/releases/latest)
+
 
 
 ![demonstration](https://user-images.githubusercontent.com/28831749/213052375-149ec79d-8157-4062-b801-f5f6791f47b2.png)
