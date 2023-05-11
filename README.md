@@ -3,7 +3,6 @@ Measures distance from an object using the camera
 
 Native Android app written in Java.
 
-CS 4750 Project
 # [Release APK](https://github.com/johnathanmitri/MeasureDistance/releases/latest)
 
 Tested on Pixel 6a, Galaxy A50, and Galaxy J3.
