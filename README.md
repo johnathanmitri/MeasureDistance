@@ -10,8 +10,7 @@ Tested on Pixel 6a, Galaxy A50, and Galaxy J3.
 
 I had around 2.5% error
 
-
-
+https://play.google.com/store/apps/details?id=com.johnathanmitri.measuredistance
 
 ![demonstration](https://user-images.githubusercontent.com/28831749/213052375-149ec79d-8157-4062-b801-f5f6791f47b2.png)
 
