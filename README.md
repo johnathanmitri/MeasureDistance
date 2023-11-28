@@ -12,6 +12,7 @@ Tested on Pixel 6a, Galaxy A50, and Galaxy J3 with ~ 98% accuracy
 2. Hold your device level
 3. Select the top and bottom of the object on screen 
 4. The device's distance from the object is calculated automatically 
+<br>
 
 ![Demo](https://github.com/johnathanmitri/MeasureDistance/assets/28831749/c978ac8c-6d69-45fb-8f19-fe9e88152876)
 ### Calculations explained:
